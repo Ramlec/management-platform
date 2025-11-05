@@ -1,0 +1,26 @@
+meta {
+  name: Create Membership
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{HOSTNAME}}/{{VERSION}}/user-memberships
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "price": 2,
+    "name": "Adhésion à 2€",
+    "description": "Adhésion de 2€ minimale et obligatoire pour consommer au Bar Commun.",
+    "startAt": "2025-01-01T00:00:00Z",
+    "endAt": "2025-12-31T00:00:00Z"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

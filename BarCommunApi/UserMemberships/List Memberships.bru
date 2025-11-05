@@ -1,0 +1,22 @@
+meta {
+  name: List Memberships
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{HOSTNAME}}/{{VERSION}}/memberships/
+  body: none
+  auth: inherit
+}
+
+body:json {
+  {
+    "startAt": "2024-12-31T23:59:59Z"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

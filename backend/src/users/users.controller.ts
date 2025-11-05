@@ -7,7 +7,7 @@ import { UserResponseDto } from "./dto/user-response.dto";
 import { PatchUserDto } from "./dto/patch-user.dto";
 import { GetUserDto } from "./dto/get-user.dto";
 
-@Controller('users')
+@Controller(`users`)
 export class UsersController {
     constructor(private readonly usersService: UsersService) { }
 
@@ -27,7 +27,7 @@ export class UsersController {
      * @param id - The id of the user.
      * @returns The user.
      */
-    @Get(':id')
+    @Get(`:id`)
     async getUser(@Param() { id }: GetUserDto): Promise<UserResponseDto> {
         const user = await this.usersService.getUser(id);
         return plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true });
@@ -54,7 +54,7 @@ export class UsersController {
      * @param patchUserDto - The user data to patch.
      * @returns The patched user.
      */
-    @Patch(':id')
+    @Patch(`:id`)
     async patchUser(
         @Param() { id }: GetUserDto,
         @Body() patchUserDto: PatchUserDto
@@ -73,7 +73,7 @@ export class UsersController {
      * @status 200 OK if the user was updated.
      * @status 201 CREATED if the user was created.
      */
-    @Put(':id')
+    @Put(`:id`)
     async updateUser(
         @Param() { id }: GetUserDto,
         @Body() updateUserDto: CreateOrUpdateUserDto
@@ -95,7 +95,7 @@ export class UsersController {
      * @param id - The id of the user.
      * @returns The delete result.
      */
-    @Delete(':id')
+    @Delete(`:id`)
     async deleteUser(@Param() { id }: GetUserDto): Promise<void> {
         await this.usersService.deleteUser(id);
     }

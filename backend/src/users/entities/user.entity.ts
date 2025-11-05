@@ -1,29 +1,37 @@
+import { UserRoles } from "src/auth/roles/roles.enum";
 import { BaseEntity, Column, CreateDateColumn, DeleteDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
-@Entity('users')
+@Entity(`users`)
 export class UserEntity extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ type: "varchar", length: 100 })
+    @Column({ type: `varchar`, length: 100 })
     firstname: string;
 
-    @Column({ type: "varchar", length: 100 })
+    @Column({ type: `varchar`, length: 100 })
     lastname: string;
 
     @Index({ unique: true })
-    @Column({ type: "varchar", length: 255, unique: true })
+    @Column({ type: `varchar`, length: 255, unique: true })
     email: string;
 
-    @Column({ type: "varchar", length: 20, nullable: true })
+    @Column({ type: `varchar`, length: 20, nullable: true })
     phone?: string;
 
-    @CreateDateColumn({ name: 'created_at' })
+    //TODO: Move this logic to database with an association table. Need to look to make role dynamic on Nest side.
+    @Column({
+        type: `simple-array`,
+        default: UserRoles.USER
+    })
+    roles: UserRoles[];
+
+    @CreateDateColumn({ name: `created_at` })
     createdAt: Date;
 
-    @UpdateDateColumn({ name: 'updated_at' })
+    @UpdateDateColumn({ name: `updated_at` })
     updatedAt: Date;
 
-    @DeleteDateColumn({ name: 'deleted_at' })
+    @DeleteDateColumn({ name: `deleted_at` })
     deletedAt?: Date;
 }

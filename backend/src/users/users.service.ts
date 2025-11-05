@@ -26,7 +26,7 @@ export class UsersService {
     async getUser(id: number): Promise<UserEntity> {
         const user = await this.userRepository.findOne({ where: { id } });
         if (!user) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundException(`User not found`);
         }
         return user;
     }
@@ -42,7 +42,7 @@ export class UsersService {
           });
           
           if (existingUser) {
-            throw new ConflictException('User with this email already exists');
+            throw new ConflictException(`User with this email already exists`);
           }
 
         return this.userRepository.save(user);
@@ -60,7 +60,7 @@ export class UsersService {
         });
         
         if (!existingUser) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundException(`User not found`);
         }
         
         this.userRepository.merge(existingUser, user);
@@ -101,7 +101,7 @@ export class UsersService {
         });
 
         if (!existingUser) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundException(`User not found`);
         }
 
         await this.userRepository.delete(id);

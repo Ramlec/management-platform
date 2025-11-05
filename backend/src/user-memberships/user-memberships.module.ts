@@ -1,11 +1,17 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserMembershipsController } from './user-memberships.controller';
-import { UserMembershipsService } from './user-memberships.service';
-import { UserMembershipEntity } from './entities/user-membership.entity';
+import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { UserMembershipsController } from "./user-memberships.controller";
+import { UserMembershipsService } from "./user-memberships.service";
+import { UserMembershipEntity } from "./entities/user-membership.entity";
+import { UsersModule } from "src/users/users.module";
+import { MembershipsModule } from "src/memberships/memberships.module";
 
 @Module({
-    imports: [TypeOrmModule.forFeature([UserMembershipEntity])],
+    imports: [
+        TypeOrmModule.forFeature([UserMembershipEntity]),
+        UsersModule,
+        MembershipsModule,
+    ],
     controllers: [UserMembershipsController],
     providers: [UserMembershipsService],
     exports: [UserMembershipsService],

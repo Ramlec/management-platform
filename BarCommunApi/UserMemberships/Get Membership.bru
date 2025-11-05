@@ -1,18 +1,18 @@
 meta {
-  name: Patch Membership
+  name: Get Membership
   type: http
-  seq: 2
+  seq: 4
 }
 
-patch {
+get {
   url: {{HOSTNAME}}/{{VERSION}}/memberships/2
-  body: json
+  body: none
   auth: inherit
 }
 
 body:json {
   {
-    "name": "Adhésion annuelle 2025 à 2€"
+    "startAt": "2024-12-31T23:59:59Z"
   }
 }
 

@@ -7,7 +7,7 @@ import { GetUserMembershipDto } from "./dto/get-user-membership.dto";
 import { UserMembershipResponseDto } from "./dto/user-membership-response.dto";
 import { PatchUserMembershipDto } from "./dto/patch-user-membership.dto";
 
-@Controller('user-memberships')
+@Controller(`user-memberships`)
 export class UserMembershipsController {
     constructor(private readonly userMembershipsService: UserMembershipsService) { }
 
@@ -26,7 +26,7 @@ export class UserMembershipsController {
      * @param id - The id of the user membership.
      * @returns The user membership.
      */
-    @Get(':id')
+    @Get(`:id`)
     async getUserMembership(@Param() { id }: GetUserMembershipDto): Promise<UserMembershipResponseDto> {
         const userMembership = await this.userMembershipsService.getUserMembership(id);
         return plainToInstance(UserMembershipResponseDto, userMembership, { excludeExtraneousValues: true });
@@ -51,7 +51,7 @@ export class UserMembershipsController {
      * @param updateUserMembershipDto - The user membership to update.
      * @returns The updated user membership.
      */
-    @Put(':id')
+    @Put(`:id`)
     async updateUserMembership(@Param() { id }: GetUserMembershipDto, @Body() updateUserMembershipDto: CreateOrUpdateUserMembershipDto): Promise<UserMembershipResponseDto> {
         const updatedUserMembership = plainToInstance(UserMembershipEntity, updateUserMembershipDto);
         const savedUserMembership = await this.userMembershipsService.updateUserMembership(id, updatedUserMembership);
@@ -65,11 +65,11 @@ export class UserMembershipsController {
      * @param patchUserMembershipDto - The user membership to patch.
      * @returns The patched user membership.
      */
-    @Patch(':id')
+    @Patch(`:id`)
     async patchUserMembership(@Param() { id }: GetUserMembershipDto, @Body() patchUserMembershipDto: PatchUserMembershipDto): Promise<UserMembershipResponseDto> {
         const userMembership = plainToInstance(UserMembershipEntity, patchUserMembershipDto);
         const updatedUserMembership = await this.userMembershipsService.patchUserMembership(id, userMembership);
-        return plainToInstance(UserMembershipEntity, updatedUserMembership, { excludeExtraneousValues: true });
+        return plainToInstance(UserMembershipResponseDto, updatedUserMembership, { excludeExtraneousValues: true });
     }
 }
 

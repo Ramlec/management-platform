@@ -1,15 +1,20 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { UserMembershipEntity } from './entities/user-membership.entity';
-import { CreateOrUpdateUserMembershipDto } from './dto/create-user-membership.dto';
-import { GetUserMembershipDto } from './dto/get-user-membership.dto';
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { UserMembershipEntity } from "./entities/user-membership.entity";
+import { UsersService } from "src/users/users.service";
+import { MembershipsService } from "src/memberships/memberships.service";
+import { UserEntity } from "src/users/entities/user.entity";
+import { MembershipEntity } from "src/memberships/entities/membership.entity";
+import { reorganizeRolesForMembership } from "./user-memberships.helpers";
 
 @Injectable()
 export class UserMembershipsService {
     constructor(
         @InjectRepository(UserMembershipEntity)
         private readonly userMembershipRepo: Repository<UserMembershipEntity>,
+        private readonly usersService: UsersService,
+        private readonly membershipsService: MembershipsService,
     ) { }
 
     /**
@@ -29,7 +34,7 @@ export class UserMembershipsService {
     async getUserMembership(id: number): Promise<UserMembershipEntity> {
         const userMembership = await this.userMembershipRepo.findOne({ where: { id } });
         if (!userMembership) {
-            throw new NotFoundException('User membership not found');
+            throw new NotFoundException(`User membership not found`);
         }
         return userMembership;
     }
@@ -40,7 +45,36 @@ export class UserMembershipsService {
      * @returns The created association between a user and a membership.
      */
     async createUserMembership(userMembership: UserMembershipEntity): Promise<UserMembershipEntity> {
-        return this.userMembershipRepo.save(userMembership);
+        const promises = [
+            this.usersService.getUser(userMembership.userId),
+            this.membershipsService.getMembership(userMembership.membershipId),
+        ];
+        const [user, membership] = await Promise.all(promises) as [UserEntity, MembershipEntity];
+        if (!user) {
+            throw new NotFoundException(`User not found`);
+        }
+        if (!membership) {
+            throw new NotFoundException(`Membership not found`);
+        }
+
+        const existingAssociation = await this.userMembershipRepo.findOne({
+            where: {
+                userId: userMembership.userId,
+                membershipId: userMembership.membershipId,
+            },
+        });
+
+        if (existingAssociation) {
+            throw new ConflictException(
+                `User ${userMembership.userId} is already associated with membership ${userMembership.membershipId}`
+            );
+        }
+        const savedUserMembership = await this.userMembershipRepo.save(userMembership);
+
+        const updatedRoles = reorganizeRolesForMembership(user.roles);
+        await this.usersService.patchUser(user.id, { roles: updatedRoles });
+
+        return savedUserMembership;
     }
 
     /**
@@ -54,7 +88,7 @@ export class UserMembershipsService {
         userMembershipDto.id = id;
         const existingUserMembership = await this.userMembershipRepo.findOne({ where: { id } });
         if (!existingUserMembership) {
-            throw new NotFoundException('User membership not found');
+            throw new NotFoundException(`User membership not found`);
         }
         this.userMembershipRepo.merge(existingUserMembership, userMembershipDto);
 
@@ -71,7 +105,7 @@ export class UserMembershipsService {
     async patchUserMembership(id: number, patchUserMembershipDto: Partial<UserMembershipEntity>): Promise<UserMembershipEntity> {
         const existingUserMembership = await this.userMembershipRepo.findOne({ where: { id } });
         if (!existingUserMembership) {
-            throw new NotFoundException('User membership not found');
+            throw new NotFoundException(`User membership not found`);
         }
         this.userMembershipRepo.merge(existingUserMembership, patchUserMembershipDto);
 
