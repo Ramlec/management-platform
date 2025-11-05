@@ -1,0 +1,23 @@
+meta {
+  name: Patch Membership
+  type: http
+  seq: 2
+}
+
+patch {
+  url: {{HOSTNAME}}/{{VERSION}}/memberships/2
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "startAt": "2025-01-01T00:00:00Z",
+    "endAt": "2025-12-31T23:59:59Z"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
