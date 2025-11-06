@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsBefore } from '../../validators/is-before.validator';
 
 
 export class MembershipResponseDto {
@@ -22,7 +21,6 @@ export class MembershipResponseDto {
 
     @ApiProperty({ description: 'The start date of the membership', example: '2025-01-01T00:00:00.000Z' })
     @Expose()
-    @IsBefore('endAt', { message: 'Start date must be before end date' })
     startAt: Date;
 
     @ApiProperty({ description: 'The end date of the membership', example: '2025-12-31T00:00:00.000Z' })

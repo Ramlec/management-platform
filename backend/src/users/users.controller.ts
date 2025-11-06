@@ -79,7 +79,7 @@ export class UsersController {
         @Body() updateUserDto: CreateOrUpdateUserDto
     ): Promise<UserResponseDto> {
         const user = plainToInstance(UserEntity, updateUserDto);
-        const updatedUser = await this.usersService.updateUser(id, user);
+        const updatedUser = await this.usersService.updateOrCreateUser(id, user);
         const response = plainToInstance(UserResponseDto, updatedUser, { excludeExtraneousValues: true });
 
         const isNew = updatedUser.createdAt.getTime() === updatedUser.updatedAt.getTime();

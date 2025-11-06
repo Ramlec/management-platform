@@ -7,7 +7,7 @@ import { MembershipResponseDto } from "./dto/membership-response";
 import { PatchMembershipDto } from "./dto/patch-membership.dto";
 import { GetMembershipDto } from "./dto/get-membership.dto";
 
-@Controller('memberships')
+@Controller(`memberships`)
 export class MembershipsController {
     constructor(private readonly membershipsService: MembershipsService) { }
 
@@ -26,7 +26,7 @@ export class MembershipsController {
      * @param id - The id of the membership.
      * @returns The membership.
      */
-    @Get(':id')
+    @Get(`:id`)
     async getMembership(@Param() { id }: GetMembershipDto): Promise<MembershipResponseDto> {
         const membership = await this.membershipsService.getMembership(id);
         return plainToInstance(MembershipResponseDto, membership, { excludeExtraneousValues: true });
@@ -53,7 +53,7 @@ export class MembershipsController {
      * @param patchMembershipDto - The membership data to patch.
      * @returns The patched membership.
      */
-    @Patch(':id')
+    @Patch(`:id`)
     async patchMembership(
         @Param() { id }: GetMembershipDto,
         @Body() patchMembershipDto: PatchMembershipDto
@@ -72,7 +72,7 @@ export class MembershipsController {
      * @status 200 OK if the membership was updated.
      * @status 201 CREATED if the membership was created.
      */
-    @Put(':id')
+    @Put(`:id`)
     async updateMembership(
         @Param() { id }: GetMembershipDto,
         @Body() updateMembershipDto: CreateOrUpdateMembershipDto
@@ -94,7 +94,7 @@ export class MembershipsController {
      * @param id - The id of the membership.
      * @returns The delete result.
      */
-    @Delete(':id')
+    @Delete(`:id`)
     async deleteMembership(@Param() { id }: GetMembershipDto): Promise<void> {
         await this.membershipsService.deleteMembership(id);
     }

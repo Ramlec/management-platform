@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsDate, IsEmail, IsNotEmpty, IsNumber, IsOptional, IsPhoneNumber, IsString } from 'class-validator';
 import { Min } from 'class-validator';
+import { IsBefore } from 'src/validators/is-before.validator';
 
 
 export class PatchMembershipDto {
@@ -27,6 +28,7 @@ export class PatchMembershipDto {
     @Transform(({ value }) => value ? new Date(value) : value)
     @IsDate({ message: 'Start date must be a valid date' })
     @IsOptional()
+    @IsBefore('endAt', { message: 'Start date must be before end date' })
     startAt: Date;
 
     @ApiProperty({ description: 'The end date of the membership', example: '2025-12-31T00:00:00.000Z' })

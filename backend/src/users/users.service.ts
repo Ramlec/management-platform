@@ -39,11 +39,11 @@ export class UsersService {
     async createUser(user: UserEntity): Promise<UserEntity> {
         const existingUser = await this.userRepository.findOne({
             where: { email: user.email },
-          });
-          
-          if (existingUser) {
+        });
+
+        if (existingUser) {
             throw new ConflictException(`User with this email already exists`);
-          }
+        }
 
         return this.userRepository.save(user);
     }
@@ -58,11 +58,11 @@ export class UsersService {
         const existingUser = await this.userRepository.findOne({
             where: { id },
         });
-        
+
         if (!existingUser) {
             throw new NotFoundException(`User not found`);
         }
-        
+
         this.userRepository.merge(existingUser, user);
 
         return this.userRepository.save(existingUser);
@@ -75,7 +75,7 @@ export class UsersService {
      * @param user - The user data to update.
      * @returns The updated user.
      */
-    async updateUser(id: number, user: UserEntity): Promise<UserEntity> {
+    async updateOrCreateUser(id: number, user: UserEntity): Promise<UserEntity> {
         user.id = id; // Ensure the id is set to the one passed in the parameters
 
         const existingUser = await this.userRepository.findOne({

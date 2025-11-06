@@ -25,7 +25,7 @@ export class MembershipsService {
     async getMembership(id: number): Promise<MembershipEntity> {
         const membership = await this.membershipRepository.findOne({ where: { id } });
         if (!membership) {
-            throw new NotFoundException('Membership not found');
+            throw new NotFoundException(`Membership not found`);
         }
         return membership;
     }
@@ -57,7 +57,7 @@ export class MembershipsService {
         if (membership.startAt && new Date(membership.startAt) > new Date(existingMembership.endAt)) {
             throw new BadRequestException('Start date must be before end date');
         }
-        if (membership.endAt && new Date(membership.endAt) < new Date(existingMembership.startAt)) {            
+        if (membership.endAt && new Date(membership.endAt) < new Date(existingMembership.startAt)) {
             throw new BadRequestException('End date must be after start date');
         }
 
