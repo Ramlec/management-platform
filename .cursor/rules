@@ -1,0 +1,468 @@
+# Règles Cursor pour le Backend BarCommun
+
+## Vue d'ensemble du projet
+- Backend API REST avec NestJS 11 et TypeScript
+- Base de données PostgreSQL avec TypeORM 0.3
+- Système de gestion de bar associatif avec rôles et permissions hiérarchiques
+- Architecture modulaire complète avec CRUD
+
+## Stack technique
+- **Framework**: NestJS 11
+- **ORM**: TypeORM 0.3
+- **Validation**: class-validator, class-transformer
+- **Documentation API**: Swagger/OpenAPI
+- **Base de données**: PostgreSQL
+- **Gestionnaire de paquets**: pnpm
+- **Linter**: ESLint avec eslint-plugin-perfectionist
+- **Tests**: Jest
+
+## Architecture et Structure
+
+### Organisation des modules
+Chaque module suit STRICTEMENT cette structure :
+```
+module-name/
+├── dto/
+│   ├── create-update-{name}.dto.ts
+│   ├── patch-{name}.dto.ts
+│   ├── get-{name}.dto.ts
+│   ├── list-{name}.dto.ts
+│   └── {name}-response.dto.ts
+├── entities/
+│   └── {name}.entity.ts
+├── {name}.controller.ts
+├── {name}.service.ts
+└── {name}.module.ts
+```
+
+### Convention de nommage
+- **Fichiers**: kebab-case (ex: `user-memberships.service.ts`)
+- **Classes**: PascalCase avec suffixe (ex: `UserEntity`, `UsersService`, `UsersController`)
+- **Variables/fonctions**: camelCase
+- **Constantes**: UPPER_SNAKE_CASE
+- **Enums**: PascalCase pour le nom, SNAKE_CASE pour les valeurs string
+- **Routes**: utiliser des backticks pour toutes les strings
+
+### Entités (TypeORM)
+
+**TOUJOURS** inclure ces colonnes de base :
+```typescript
+@PrimaryGeneratedColumn()
+id: number;
+
+@CreateDateColumn({ name: `created_at` })
+createdAt: Date;
+
+@UpdateDateColumn({ name: `updated_at` })
+updatedAt: Date;
+
+@DeleteDateColumn({ name: `deleted_at` })
+deletedAt?: Date;
+```
+
+**Règles pour les entités** :
+- Hériter de `BaseEntity` de TypeORM
+- Nom de la classe : `{Name}Entity`
+- Décorateur `@Entity()` avec le nom de table en backticks
+- Utiliser `@Column()` avec configuration explicite (type, length, nullable)
+- Pour les index uniques : combiner `@Index({ unique: true })` et `unique: true` dans `@Column()`
+- Utiliser `@Column({ type: 'simple-array' })` pour les tableaux simples
+
+### DTOs
+
+#### 1. CreateOrUpdateDto (pour POST et PUT)
+```typescript
+export class CreateOrUpdateUserDto {
+    @ApiProperty({
+        description: `Description complète`,
+        example: `exemple`
+    })
+    @IsString()
+    @IsNotEmpty()
+    propertyName: string;
+    
+    // Pour les propriétés optionnelles avec valeur par défaut
+    @Transform(({ value }) => value ?? defaultValue)
+    @IsOptional()
+    optionalProperty?: Type;
+}
+```
+
+#### 2. PatchDto (pour PATCH)
+```typescript
+export class PatchUserDto {
+    @ApiProperty({ description: `...`, required: false })
+    @IsString()
+    @IsOptional()
+    propertyName?: string;
+}
+```
+**Tous les champs sont optionnels dans un PatchDto**
+
+#### 3. GetDto (pour paramètres URL)
+```typescript
+export class GetUserDto {
+    @IsInt()
+    @Type(() => Number)
+    id: number;
+}
+```
+
+#### 4. ResponseDto (pour les réponses)
+```typescript
+export class UserResponseDto {
+    @ApiProperty({ description: `...`, example: 1 })
+    @Expose()
+    id: number;
+    
+    // Exclure les champs sensibles
+    @Exclude()
+    deletedAt?: Date;
+}
+```
+**Utiliser `@Expose()` pour tous les champs à exposer et `@Exclude()` pour ceux à cacher**
+
+### Controllers
+
+**Pattern standard pour CRUD complet** :
+```typescript
+@Controller(`resource-name`)
+export class ResourceController {
+    constructor(private readonly resourceService: ResourceService) { }
+
+    /**
+     * JSDoc pour chaque méthode avec @param et @returns
+     */
+    @Get()
+    async listResources(): Promise<ResourceResponseDto[]> {
+        const resources = await this.resourceService.listResources();
+        return plainToInstance(ResourceResponseDto, resources, { excludeExtraneousValues: true });
+    }
+
+    @Get(`:id`)
+    async getResource(@Param() { id }: GetResourceDto): Promise<ResourceResponseDto> {
+        const resource = await this.resourceService.getResource(id);
+        return plainToInstance(ResourceResponseDto, resource, { excludeExtraneousValues: true });
+    }
+
+    @Post()
+    async createResource(@Body() createDto: CreateOrUpdateResourceDto): Promise<ResourceResponseDto> {
+        const newResource = plainToInstance(ResourceEntity, createDto);
+        const saved = await this.resourceService.createResource(newResource);
+        return plainToInstance(ResourceResponseDto, saved, { excludeExtraneousValues: true });
+    }
+
+    @Patch(`:id`)
+    async patchResource(
+        @Param() { id }: GetResourceDto,
+        @Body() patchDto: PatchResourceDto
+    ): Promise<ResourceResponseDto> {
+        const resource: Partial<ResourceEntity> = plainToInstance(ResourceEntity, patchDto);
+        const updated = await this.resourceService.patchResource(id, resource);
+        return plainToInstance(ResourceResponseDto, updated, { excludeExtraneousValues: true });
+    }
+
+    @Put(`:id`)
+    async updateResource(
+        @Param() { id }: GetResourceDto,
+        @Body() updateDto: CreateOrUpdateResourceDto
+    ): Promise<ResourceResponseDto> {
+        const resource = plainToInstance(ResourceEntity, updateDto);
+        const updated = await this.resourceService.updateResource(id, resource);
+        const response = plainToInstance(ResourceResponseDto, updated, { excludeExtraneousValues: true });
+
+        const isNew = updated.createdAt.getTime() === updated.updatedAt.getTime();
+        if (isNew) {
+            throw new HttpException(response, HttpStatus.CREATED);
+        }
+
+        return response;
+    }
+
+    @Delete(`:id`)
+    async deleteResource(@Param() { id }: GetResourceDto): Promise<void> {
+        await this.resourceService.deleteResource(id);
+    }
+}
+```
+
+**Règles importantes** :
+- Utiliser la déstructuration pour les `@Param()` et `@Body()`
+- TOUJOURS transformer avec `plainToInstance` pour les DTOs
+- Utiliser `{ excludeExtraneousValues: true }` avec les ResponseDto
+- PUT retourne 201 si création, 200 si mise à jour
+- JSDoc complet pour chaque endpoint
+
+### Services
+
+**Pattern standard** :
+```typescript
+@Injectable()
+export class ResourceService {
+    constructor(
+        @InjectRepository(ResourceEntity)
+        private readonly resourceRepository: Repository<ResourceEntity>
+    ) { }
+
+    async listResources(): Promise<ResourceEntity[]> {
+        return this.resourceRepository.find();
+    }
+
+    async getResource(id: number): Promise<ResourceEntity> {
+        const resource = await this.resourceRepository.findOne({ where: { id } });
+        if (!resource) {
+            throw new NotFoundException(`Resource not found`);
+        }
+        return resource;
+    }
+
+    async createResource(resource: ResourceEntity): Promise<ResourceEntity> {
+        // Vérifier l'existence si nécessaire
+        const existing = await this.resourceRepository.findOne({
+            where: { uniqueField: resource.uniqueField },
+        });
+        
+        if (existing) {
+            throw new ConflictException(`Resource with this field already exists`);
+        }
+
+        return this.resourceRepository.save(resource);
+    }
+
+    async patchResource(id: number, resource: Partial<ResourceEntity>): Promise<ResourceEntity> {
+        const existing = await this.resourceRepository.findOne({ where: { id } });
+        
+        if (!existing) {
+            throw new NotFoundException(`Resource not found`);
+        }
+        
+        this.resourceRepository.merge(existing, resource);
+        return this.resourceRepository.save(existing);
+    }
+
+    async updateResource(id: number, resource: ResourceEntity): Promise<ResourceEntity> {
+        resource.id = id; // Assurer que l'id est bien celui du paramètre
+
+        const existing = await this.resourceRepository.findOne({ where: { id } });
+
+        if (!existing) {
+            return this.createResource(resource);
+        }
+
+        this.resourceRepository.merge(existing, resource);
+        return this.resourceRepository.save(existing);
+    }
+
+    async deleteResource(id: number): Promise<void> {
+        const existing = await this.resourceRepository.findOne({ where: { id } });
+
+        if (!existing) {
+            throw new NotFoundException(`Resource not found`);
+        }
+
+        await this.resourceRepository.delete(id);
+    }
+}
+```
+
+**Règles pour les services** :
+- TOUJOURS vérifier l'existence avant update/delete
+- Utiliser `NotFoundException` si ressource introuvable
+- Utiliser `ConflictException` pour violations d'unicité
+- Utiliser `merge` pour combiner les modifications
+- PUT fait un upsert (création si n'existe pas)
+- JSDoc complet avec @param et @returns
+
+### Modules
+
+```typescript
+@Module({
+    imports: [
+        TypeOrmModule.forFeature([ResourceEntity]),
+        // Autres modules si nécessaires
+    ],
+    controllers: [ResourceController],
+    providers: [ResourceService],
+    exports: [ResourceService], // Si utilisé ailleurs
+})
+export class ResourceModule { }
+```
+
+## Système d'authentification et permissions
+
+### Rôles
+- Définis dans `src/auth/roles/roles.enum.ts`
+- Hiérarchie : ADMIN > BOARD > COMMITEE > SERVICES_BOARD > REFERANT > BARISTA > ACTIVE_MEMBER > MEMBER > USER > GUEST
+- Métadonnées dans `roles.constant.ts` avec labels et descriptions en français
+
+### Permissions
+- Définies dans `src/auth/permissions/permissions.enum.ts`
+- Mapping rôles → permissions dans `permissions.constant.ts`
+- ADMIN a la permission `ADMIN_ALL` (wildcard)
+
+### Guards
+- Utiliser `@UseGuards(PermissionsGuard)` sur les routes protégées
+- Décorer avec `@RequirePermissions(Permission.XXX)` pour spécifier les permissions
+
+## Conventions de code
+
+### Strings
+- **TOUJOURS** utiliser des backticks pour les strings (template literals)
+```typescript
+// ✅ Bon
+throw new NotFoundException(`User not found`);
+const route = `users`;
+
+// ❌ Mauvais
+throw new NotFoundException('User not found');
+```
+
+### Imports
+Ordre des imports :
+1. Imports NestJS
+2. Imports de librairies tierces
+3. Imports locaux (entités, DTOs, services)
+4. Ligne vide entre les groupes
+
+```typescript
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+
+import { Repository } from 'typeorm';
+import { plainToInstance } from 'class-transformer';
+
+import { UserEntity } from './entities/user.entity';
+import { UsersService } from './users.service';
+```
+
+### JSDoc
+```typescript
+/**
+ * Description complète de la méthode.
+ * @param paramName - Description du paramètre.
+ * @returns Description du retour.
+ * @throws NotFoundException si...
+ */
+```
+
+### Validation personnalisée
+- Créer des validators customs dans `src/validators/`
+- Exemple : `is-before.validator.ts` pour valider des dates
+
+### Configuration
+- Variables d'environnement via `ConfigService`
+- Valeurs par défaut toujours fournies
+- ConfigModule global dans AppModule
+
+## Bonnes pratiques
+
+### TypeScript
+- **Typage strict** : toujours typer les paramètres, retours et propriétés
+- Éviter `any`, préférer `unknown` si nécessaire
+- Utiliser des types unions et intersections quand approprié
+
+### Async/Await
+- TOUJOURS utiliser `async/await`, jamais `.then()`
+- Toujours retourner les Promises du repository
+
+### Transformations
+```typescript
+// Pour les responses
+plainToInstance(ResponseDto, data, { excludeExtraneousValues: true })
+
+// Pour les entities depuis DTOs
+plainToInstance(EntityClass, dto)
+
+// Pour les patches
+plainToInstance(EntityClass, patchDto) // Retourne Partial<EntityClass>
+```
+
+### Gestion d'erreurs
+- `NotFoundException` : ressource non trouvée (404)
+- `ConflictException` : conflit (ex: email déjà utilisé) (409)
+- `ForbiddenException` : permissions insuffisantes (403)
+- Messages d'erreur en anglais et explicites avec backticks
+
+### Tests
+- Fichiers `.spec.ts` à côté de chaque fichier de code
+- Tests E2E dans le dossier `test/`
+- Utiliser Jest avec supertest pour les tests E2E
+
+## Base de données
+
+### Migrations
+- `synchronize: true` en développement uniquement
+- En production, utiliser les migrations TypeORM
+
+### Relations
+- Définir les relations dans les entités avec les décorateurs appropriés
+- Toujours spécifier `cascade`, `onDelete`, `onUpdate` si nécessaire
+
+### Requêtes
+- Préférer `find()`, `findOne()`, etc. pour les requêtes simples
+- Utiliser QueryBuilder pour les requêtes complexes
+- Toujours utiliser `where` avec des objets, pas de strings SQL
+
+## Commandes utiles
+
+```bash
+# Développement
+pnpm start:dev
+
+# Build
+pnpm build
+
+# Tests
+pnpm test
+pnpm test:e2e
+pnpm test:cov
+
+# Linting
+pnpm lint
+
+# Formatage
+pnpm format
+```
+
+## Checklist pour nouvelle feature
+
+- [ ] Créer l'entité avec tous les décorateurs TypeORM
+- [ ] Créer les 4 DTOs (Create/Update, Patch, Get, Response)
+- [ ] Implémenter le service avec CRUD complet
+- [ ] Implémenter le controller avec tous les endpoints
+- [ ] Créer le module avec imports/exports appropriés
+- [ ] Ajouter le module dans AppModule
+- [ ] Documenter avec JSDoc
+- [ ] Ajouter les décorateurs Swagger (@ApiProperty)
+- [ ] Implémenter les guards de permissions si nécessaire
+- [ ] Écrire les tests unitaires (.spec.ts)
+- [ ] Tester avec Bruno (voir dossier BarCommunApi/)
+
+## Notes spécifiques au projet
+
+- Le système de rôles sera migré vers une table de BDD (voir TODO dans user.entity.ts)
+- Les référents ont un code à 4 chiffres pour la caisse (à implémenter)
+- Validation d'adhésion accessible via code à 4 chiffres (session jusqu'à 5h)
+- Soft delete activé sur toutes les entités (deletedAt)
+
+## Anti-patterns à éviter
+
+❌ Ne JAMAIS :
+- Utiliser des quotes simples/doubles, toujours des backticks
+- Omettre les JSDoc sur les méthodes publiques
+- Oublier la vérification d'existence avant update/delete
+- Retourner des entités directement, toujours via ResponseDto
+- Utiliser .then() au lieu de async/await
+- Mettre la logique métier dans les controllers
+- Oublier les décorateurs de validation sur les DTOs
+- Oublier excludeExtraneousValues avec les ResponseDto
+
+## Priorités lors de la génération de code
+
+1. **Cohérence** : suivre EXACTEMENT les patterns existants
+2. **Complétude** : implémenter TOUJOURS le CRUD complet
+3. **Type-safety** : typage strict partout
+4. **Documentation** : JSDoc + Swagger complets
+5. **Validation** : class-validator sur tous les DTOs
+6. **Sécurité** : vérifications d'existence, gestion d'erreurs appropriée
+
