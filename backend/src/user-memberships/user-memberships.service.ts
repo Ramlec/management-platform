@@ -50,48 +50,37 @@ export class UserMembershipsService {
             this.membershipsService.getMembership(userMembership.membershipId),
         ];
         const [user, membership] = await Promise.all(promises) as [UserEntity, MembershipEntity];
-        if (!user) {
-            throw new NotFoundException(`User not found`);
-        }
-        if (!membership) {
-            throw new NotFoundException(`Membership not found`);
-        }
-
         const existingAssociation = await this.userMembershipRepo.findOne({
             where: {
                 userId: userMembership.userId,
                 membershipId: userMembership.membershipId,
             },
         });
-
         if (existingAssociation) {
             throw new ConflictException(
                 `User ${userMembership.userId} is already associated with membership ${userMembership.membershipId}`
             );
         }
         const savedUserMembership = await this.userMembershipRepo.save(userMembership);
-
         const updatedRoles = reorganizeRolesForMembership(user.roles);
         await this.usersService.patchUser(user.id, { roles: updatedRoles });
-
         return savedUserMembership;
     }
 
     /**
      * Fully update an association between a user and a membership by its id.
+     * If the user membership does not exist, it will be created.
      * @param id - The id of the association between a user and a membership to update.
-     * @param updateUserMembershipDto - New data for the association between a user and a membership.
-     * @returns The updated association between a user and a membership.
-     * @status 400 BAD REQUEST if the user membership does not exist.
+     * @param userMembership - New data for the association between a user and a membership.
+     * @returns The updated or created association between a user and a membership.
      */
-    async updateUserMembership(id: number, userMembershipDto: Partial<UserMembershipEntity>): Promise<UserMembershipEntity> {
-        userMembershipDto.id = id;
+    async updateUserMembership(id: number, userMembership: UserMembershipEntity): Promise<UserMembershipEntity> {
+        userMembership.id = id;
         const existingUserMembership = await this.userMembershipRepo.findOne({ where: { id } });
         if (!existingUserMembership) {
-            throw new NotFoundException(`User membership not found`);
+            return this.createUserMembership(userMembership);
         }
-        this.userMembershipRepo.merge(existingUserMembership, userMembershipDto);
-
+        this.userMembershipRepo.merge(existingUserMembership, userMembership);
         return this.userMembershipRepo.save(existingUserMembership);
     }
 

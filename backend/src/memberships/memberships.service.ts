@@ -52,13 +52,13 @@ export class MembershipsService {
             where: { id },
         });
         if (!existingMembership) {
-            throw new NotFoundException('Membership not found');
+            throw new NotFoundException(`Membership not found`);
         }
         if (membership.startAt && new Date(membership.startAt) > new Date(existingMembership.endAt)) {
-            throw new BadRequestException('Start date must be before end date');
+            throw new BadRequestException(`Start date must be before end date`);
         }
         if (membership.endAt && new Date(membership.endAt) < new Date(existingMembership.startAt)) {
-            throw new BadRequestException('End date must be after start date');
+            throw new BadRequestException(`End date must be after start date`);
         }
 
         this.membershipRepository.merge(existingMembership, membership);
@@ -89,7 +89,7 @@ export class MembershipsService {
     }
 
     /**
-     * Delete a membership, if the membership does not exist, an error will be thrown.
+     * Delete a membership (soft delete), if the membership does not exist, an error will be thrown.
      * @param id - The id of the membership.
      * @returns The delete result.
      * @status 404 NOT FOUND if the membership does not exist.
@@ -98,11 +98,9 @@ export class MembershipsService {
         const existingMembership = await this.membershipRepository.findOne({
             where: { id },
         });
-
         if (!existingMembership) {
-            throw new NotFoundException('Membership not found');
+            throw new NotFoundException(`Membership not found`);
         }
-
-        await this.membershipRepository.delete(id);
+        await this.membershipRepository.softDelete(id);
     }
 }

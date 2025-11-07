@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Put } from "@nestjs/common";
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Patch, Post, Put } from "@nestjs/common";
 import { UserMembershipsService } from "./user-memberships.service";
 import { UserMembershipEntity } from "./entities/user-membership.entity";
 import { CreateOrUpdateUserMembershipDto } from "./dto/create-user-membership.dto";
@@ -49,14 +49,20 @@ export class UserMembershipsController {
      * If the user membership does not exist, it will be created.
      * @param id - The id of the user membership.
      * @param updateUserMembershipDto - The user membership to update.
-     * @returns The updated user membership.
+     * @returns The updated or created user membership.
+     * @status 200 OK if the user membership was updated.
+     * @status 201 CREATED if the user membership was created.
      */
     @Put(`:id`)
     async updateUserMembership(@Param() { id }: GetUserMembershipDto, @Body() updateUserMembershipDto: CreateOrUpdateUserMembershipDto): Promise<UserMembershipResponseDto> {
         const updatedUserMembership = plainToInstance(UserMembershipEntity, updateUserMembershipDto);
         const savedUserMembership = await this.userMembershipsService.updateUserMembership(id, updatedUserMembership);
-        return plainToInstance(UserMembershipResponseDto, savedUserMembership, { excludeExtraneousValues: true });
-
+        const response = plainToInstance(UserMembershipResponseDto, savedUserMembership, { excludeExtraneousValues: true });
+        const isNew = savedUserMembership.createdAt.getTime() === savedUserMembership.updatedAt.getTime();
+        if (isNew) {
+            throw new HttpException(response, HttpStatus.CREATED);
+        }
+        return response;
     }
 
     /**
