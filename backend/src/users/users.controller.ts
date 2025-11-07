@@ -6,10 +6,16 @@ import { plainToInstance } from "class-transformer";
 import { UserResponseDto } from "./dto/user-response.dto";
 import { PatchUserDto } from "./dto/patch-user.dto";
 import { GetUserDto } from "./dto/get-user.dto";
+import { GetUserMembershipDto } from "./dto/get-user-membership.dto";
+import { UserMembershipsService } from "src/user-memberships/user-memberships.service";
+import { UserMembershipResponseDto } from "src/user-memberships/dto/user-membership-response.dto";
 
 @Controller(`users`)
 export class UsersController {
-    constructor(private readonly usersService: UsersService) { }
+    constructor(
+        private readonly usersService: UsersService,
+        private readonly userMembershipsService: UserMembershipsService,
+    ) { }
 
 
     /**
@@ -98,5 +104,44 @@ export class UsersController {
     @Delete(`:id`)
     async deleteUser(@Param() { id }: GetUserDto): Promise<void> {
         await this.usersService.deleteUser(id);
+    }
+
+    /**
+     * Get all memberships for a specific user.
+     * @param id - The id of the user.
+     * @returns All memberships for this user.
+     */
+    @Get(`:id/memberships`)
+    async getUserMemberships(@Param() { id }: GetUserDto): Promise<UserMembershipResponseDto[]> {
+        const userMemberships = await this.userMembershipsService.getUserMemberships(id);
+        return plainToInstance(UserMembershipResponseDto, userMemberships, { excludeExtraneousValues: true });
+    }
+
+    /**
+     * Get the active membership for a specific user (based on current date).
+     * @param id - The id of the user.
+     * @returns The active membership for this user, or null if no active membership.
+     */
+    @Get(`:id/memberships/active`)
+    async getActiveMembership(@Param() { id }: GetUserDto): Promise<UserMembershipResponseDto | null> {
+        const activeMembership = await this.userMembershipsService.getActiveMembership(id);
+        if (!activeMembership) {
+            return null;
+        }
+        return plainToInstance(UserMembershipResponseDto, activeMembership, { excludeExtraneousValues: true });
+    }
+
+    /**
+     * Get a specific membership for a user by userId and membershipId.
+     * @param id - The user id.
+     * @param membershipId - The membership id.
+     * @returns The user membership.
+     */
+    @Get(`:id/memberships/:membershipId`)
+    async getUserMembershipByUserAndMembership(
+        @Param() { id, membershipId }: GetUserMembershipDto
+    ): Promise<UserMembershipResponseDto> {
+        const userMembership = await this.userMembershipsService.getUserMembershipByUserAndMembership(id, membershipId);
+        return plainToInstance(UserMembershipResponseDto, userMembership, { excludeExtraneousValues: true });
     }
 }

@@ -111,5 +111,61 @@ export class UserMembershipsService {
 
         return this.userMembershipRepo.save(existingUserMembership);
     }
+
+    /**
+     * List all memberships for a specific user.
+     * @param userId - The id of the user.
+     * @returns Array of user memberships for this user.
+     */
+    async getUserMemberships(userId: number): Promise<UserMembershipEntity[]> {
+        // Verify that user exists
+        await this.usersService.getUser(userId);
+
+        return this.userMembershipRepo.find({
+            where: { userId },
+            relations: [`membership`],
+            order: { createdAt: `DESC` },
+        });
+    }
+
+    /**
+     * Get the active membership for a specific user (based on current date).
+     * @param userId - The id of the user.
+     * @returns The active user membership, or null if no active membership found.
+     */
+    async getActiveMembership(userId: number): Promise<UserMembershipEntity | null> {
+        // Verify that user exists
+        await this.usersService.getUser(userId);
+
+        const now = new Date();
+        const userMemberships = await this.userMembershipRepo
+            .createQueryBuilder(`um`)
+            .leftJoinAndSelect(`um.membership`, `m`)
+            .where(`um.userId = :userId`, { userId })
+            .andWhere(`m.startAt <= :now`, { now })
+            .andWhere(`m.endAt >= :now`, { now })
+            .getOne();
+
+        return userMemberships || null;
+    }
+
+    /**
+     * Get a specific user membership by userId and membershipId.
+     * @param userId - The id of the user.
+     * @param membershipId - The id of the membership.
+     * @returns The user membership.
+     */
+    async getUserMembershipByUserAndMembership(userId: number, membershipId: number): Promise<UserMembershipEntity> {
+        const userMembership = await this.userMembershipRepo.findOne({
+            where: { userId, membershipId },
+            relations: [`membership`, `user`],
+        });
+
+        if (!userMembership) {
+            throw new NotFoundException(`User membership not found for user ${userId} and membership ${membershipId}`);
+        }
+
+        return userMembership;
+    }
 }
 
