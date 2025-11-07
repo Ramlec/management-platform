@@ -2,6 +2,118 @@
 globs: backend/src/*
 alwaysApply: false
 ---
+
+# Règles Backend NestJS - BarCommun
+
+## Principes Généraux TypeScript
+
+### Principes de Base
+
+- **Anglais pour tout le code** : noms de variables, fonctions, classes, commentaires techniques
+- **Typage strict** : toujours déclarer le type de chaque variable et fonction (paramètres et retour)
+  - Éviter `any`, préférer `unknown` si nécessaire
+  - Créer les types nécessaires
+- **Documentation** : utiliser JSDoc pour documenter les classes et méthodes publiques
+- **Un export par fichier**
+
+### Nomenclature
+
+- **PascalCase** : classes, interfaces, types, enums
+- **camelCase** : variables, fonctions, méthodes, propriétés
+- **kebab-case** : noms de fichiers et dossiers
+- **UPPERCASE** : variables d'environnement et constantes
+  - Éviter les magic numbers, définir des constantes
+- **Nommage des fonctions** :
+  - Commencer par un verbe
+  - Booléens : `isX`, `hasX`, `canX`, etc.
+  - Fonctions sans retour : `executeX`, `saveX`, etc.
+- **Mots complets** : éviter les abréviations sauf :
+  - Abréviations standard : API, URL, DTO, etc.
+  - Abréviations bien connues : `i`, `j` (boucles), `err` (erreurs), `ctx` (contextes), `req`, `res`, `next` (middleware)
+
+### Fonctions
+
+- **Courtes et ciblées** : moins de 20 instructions, un seul objectif
+- **Éviter l'imbrication** :
+  - Early returns
+  - Extraction vers des fonctions utilitaires
+- **Higher-order functions** : utiliser `map`, `filter`, `reduce` au lieu de boucles complexes
+  - Arrow functions pour les fonctions simples (< 3 instructions)
+  - Fonctions nommées pour les fonctions complexes
+- **Paramètres par défaut** : préférer aux vérifications null/undefined
+- **Pattern RO-RO** (Receive Object, Return Object) :
+  - Utiliser un objet pour passer plusieurs paramètres
+  - Utiliser un objet pour retourner des résultats complexes
+  - Déclarer les types pour les entrées et sorties
+- **Un seul niveau d'abstraction** par fonction
+
+### Data
+
+- **Encapsulation** : ne pas abuser des types primitifs, créer des types composites
+- **Validation interne** : éviter les validations dans les fonctions, utiliser des classes avec validation
+- **Immutabilité préférée** :
+  - `readonly` pour les données immuables
+  - `as const` pour les littéraux constants
+
+### Classes
+
+- **Principes SOLID** :
+  - Single Responsibility : une classe = une responsabilité
+  - Open/Closed : ouvert à l'extension, fermé à la modification
+  - Liskov Substitution : les sous-classes doivent être substituables
+  - Interface Segregation : interfaces spécifiques plutôt qu'une grosse interface
+  - Dependency Inversion : dépendre d'abstractions, pas de concrétions
+- **Composition > Héritage**
+- **Interfaces** pour définir les contrats
+- **Classes petites** :
+  - Moins de 200 instructions
+  - Moins de 10 méthodes publiques
+  - Moins de 10 propriétés
+
+### Exceptions
+
+- **Utiliser les exceptions** pour les erreurs inattendues
+- **Catcher une exception** seulement pour :
+  - Corriger un problème attendu
+  - Ajouter du contexte
+  - Sinon, utiliser un handler global
+
+### Testing
+
+- **Convention Arrange-Act-Assert** pour les tests
+- **Noms de variables clairs** : `inputX`, `mockX`, `actualX`, `expectedX`
+- **Tests unitaires** pour chaque fonction publique
+  - Test doubles pour simuler les dépendances
+  - Sauf pour les dépendances tierces non coûteuses
+- **Tests d'acceptance** pour chaque module
+  - Convention Given-When-Then
+
+## Architecture NestJS
+
+### Structure Modulaire
+
+- **Encapsulation par module** : un module par domaine/route principal
+  - Un controller principal pour sa route
+  - Controllers secondaires pour les sous-routes
+  - Dossier `dto/` avec les DTOs
+  - Dossier `entities/` avec les entités de persistence
+  - Services avec la logique métier
+- **Module Core** pour les artefacts NestJS :
+  - Global filters pour la gestion des exceptions
+  - Global middlewares pour la gestion des requêtes
+  - Guards pour la gestion des permissions
+  - Interceptors pour la gestion des requêtes
+- **Module Shared** pour les services partagés :
+  - Utilitaires
+  - Logique métier partagée
+
+### DTOs (Data Transfer Objects)
+
+#### 1. CreateDto et UpdateDto (pour POST et PUT)
+```typescript
+export class CreateOrUpdateUserDto {
+    @ApiProperty({ 
+        description: `Description du champ`,
         example: `exemple`
     })
     @IsString()
@@ -114,11 +226,14 @@ export class ResourceController {
 ```
 
 **Règles importantes** :
-- Utiliser la déstructuration pour les `@Param()` et `@Body()`
+- **Déstructuration des paramètres** :
+  - `@Param()` : TOUJOURS déstructurer → `@Param() { id }: GetResourceDto`
+  - `@Query()` : TOUJOURS déstructurer → `@Query() { filter, page }: QueryDto`
+  - `@Body()` : NE JAMAIS déstructurer → `@Body() createDto: CreateResourceDto`
 - TOUJOURS transformer avec `plainToInstance` pour les DTOs
 - Utiliser `{ excludeExtraneousValues: true }` avec les ResponseDto
 - PUT retourne 201 si création, 200 si mise à jour
-- JSDoc complet pour chaque endpoint
+- JSDoc complet pour chaque endpoint avec chaque paramètre déstructuré documenté individuellement
 
 ### Services
 
@@ -215,6 +330,41 @@ export class ResourceService {
 export class ResourceModule { }
 ```
 
+### Entités (TypeORM)
+
+**Pattern standard** :
+```typescript
+@Entity(`resource_name`)
+export class ResourceEntity {
+    @PrimaryGeneratedColumn()
+    id: number;
+    
+    @Column({ type: `varchar`, length: 255 })
+    name: string;
+    
+    @Column({ type: `text`, nullable: true })
+    description?: string;
+    
+    @CreateDateColumn()
+    createdAt: Date;
+    
+    @UpdateDateColumn()
+    updatedAt: Date;
+    
+    @DeleteDateColumn()
+    deletedAt?: Date;
+}
+```
+
+**Règles pour les entités** :
+- Une entité par fichier dans le dossier `entities/`
+- Utiliser les décorateurs TypeORM appropriés
+- Toujours inclure `id`, `createdAt`, `updatedAt`, `deletedAt` (soft delete)
+- Définir les types explicitement : `type: 'varchar'`, `length: 255`, etc.
+- Utiliser `nullable: true` pour les champs optionnels
+- Définir les relations avec `@OneToMany`, `@ManyToOne`, `@ManyToMany`
+- Spécifier `cascade`, `onDelete`, `onUpdate` pour les relations
+
 ## Système d'authentification et permissions
 
 ### Rôles
@@ -310,10 +460,18 @@ plainToInstance(EntityClass, patchDto) // Retourne Partial<EntityClass>
 - `ForbiddenException` : permissions insuffisantes (403)
 - Messages d'erreur en anglais et explicites avec backticks
 
-### Tests
-- Fichiers `.spec.ts` à côté de chaque fichier de code
-- Tests E2E dans le dossier `test/`
-- Utiliser Jest avec supertest pour les tests E2E
+### Testing
+
+- **Framework** : Jest (standard NestJS)
+- **Tests unitaires** :
+  - Fichiers `.spec.ts` à côté de chaque fichier de code
+  - Écrire des tests pour chaque controller et service
+  - Utiliser des test doubles pour les dépendances
+- **Tests E2E** :
+  - Dans le dossier `test/`
+  - Un test E2E pour chaque module d'API
+  - Utiliser Jest avec supertest
+- **Smoke test** : ajouter une méthode `admin/test` à chaque controller comme test de santé
 
 ## Base de données
 
@@ -383,6 +541,8 @@ pnpm format
 - Mettre la logique métier dans les controllers
 - Oublier les décorateurs de validation sur les DTOs
 - Oublier excludeExtraneousValues avec les ResponseDto
+- **Déstructurer les `@Body()`** (❌ `@Body() { name }: CreateDto` → ✅ `@Body() createDto: CreateDto`)
+- **Ne PAS déstructurer les `@Param()` et `@Query()`** (❌ `@Param() params: GetDto` → ✅ `@Param() { id }: GetDto`)
 
 ## Priorités lors de la génération de code
 
