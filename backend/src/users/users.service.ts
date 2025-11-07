@@ -91,7 +91,7 @@ export class UsersService {
     }
 
     /**
-     * Delete a user, if the user does not exist, an error will be thrown.
+     * Delete a user (soft delete), if the user does not exist, an error will be thrown.
      * @param id - The id of the user.
      * @returns The delete result.
      */
@@ -99,11 +99,9 @@ export class UsersService {
         const existingUser = await this.userRepository.findOne({
             where: { id },
         });
-
         if (!existingUser) {
             throw new NotFoundException(`User not found`);
         }
-
-        await this.userRepository.delete(id);
+        await this.userRepository.softDelete(id);
     }
 }
