@@ -1,0 +1,17 @@
+meta {
+  name: Get Active Membership
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{HOSTNAME}}/{{VERSION}}/users/1/memberships/active
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
+
