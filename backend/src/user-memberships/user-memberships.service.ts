@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { MoreThanOrEqual, LessThanOrEqual, Repository } from "typeorm";
 import { UserMembershipEntity } from "./entities/user-membership.entity";
 import { UsersService } from "src/users/users.service";
 import { MembershipsService } from "src/memberships/memberships.service";
@@ -123,19 +123,22 @@ export class UserMembershipsService {
      * @returns The active user membership, or null if no active membership found.
      */
     async getActiveMembership(userId: number): Promise<UserMembershipEntity | null> {
-        // Verify that user exists
         await this.usersService.getUser(userId);
 
         const now = new Date();
-        const userMemberships = await this.userMembershipRepo
-            .createQueryBuilder(`um`)
-            .leftJoinAndSelect(`um.membership`, `m`)
-            .where(`um.userId = :userId`, { userId })
-            .andWhere(`m.startAt <= :now`, { now })
-            .andWhere(`m.endAt >= :now`, { now })
-            .getOne();
+        const userMembership = await this.userMembershipRepo.findOne({
+            where: {
+                userId,
+                membership: {
+                    startAt: LessThanOrEqual(now),
+                    endAt: MoreThanOrEqual(now),
+                },
+            },
+            order: { createdAt: "DESC" },
+            relations: [`membership`],
+        });
 
-        return userMemberships || null;
+        return userMembership;
     }
 
     /**
