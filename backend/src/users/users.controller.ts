@@ -160,6 +160,15 @@ export class UsersController {
             excludeExtraneousValues: true,
         });
 
+        /*
+         * TODO: Use an interceptor instead.
+         * FIXME: Could lead to misleading http status code if created and updated at are not the same.
+         * The isNew detection using createdAt.getTime() === updatedAt.getTime() is unreliable because
+         * database timestamp precision and timing can cause these values to differ even for newly created records,
+         * leading to incorrect HTTP status codes (200 instead of 201) being returned for new resources.
+         * A more reliable approach would be to use a flag in the database to track if the resource is new
+         * but that would imply the service to return isNew object.
+         */
         const isNew = updatedUser.createdAt.getTime() === updatedUser.updatedAt.getTime();
         if (isNew) {
             throw new HttpException(response, HttpStatus.CREATED); // Could be an interceptor instead
