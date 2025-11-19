@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 
 
 export class MembershipResponseDto {
@@ -34,4 +34,7 @@ export class MembershipResponseDto {
     @ApiProperty({ description: 'The date the membership was updated', example: '2021-01-01T00:00:00.000Z' })
     @Expose()
     updatedAt: Date;
+
+    @Exclude()
+    deletedAt?: Date;
 }
