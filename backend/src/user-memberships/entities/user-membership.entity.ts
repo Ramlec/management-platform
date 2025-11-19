@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { MembershipEntity } from "src/memberships/entities/membership.entity";
 import { UserEntity } from "src/users/entities/user.entity";
-import { BaseEntity, Column, CreateDateColumn, DeleteDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 
 @Entity(`user_memberships`)
 @Index([`userId`, `membershipId`])
