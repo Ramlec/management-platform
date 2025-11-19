@@ -99,7 +99,7 @@ export class MembershipsService {
     }
 
     /**
-     * Delete a membership (soft delete), if the membership does not exist or is associated with user memberships, an error will be thrown.
+     * Delete a membership, if the membership does not exist or is associated with user memberships, an error will be thrown.
      * @param id - The id of the membership.
      * @returns The delete result.
      * @status 404 NOT FOUND if the membership does not exist.
