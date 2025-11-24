@@ -1,19 +1,16 @@
 import { UserRoles } from "src/auth/roles/roles.enum";
 
 /**
- * Reorganize the roles of the user for the membership.
- * Remove the roles that are not relevant for the membership and add the ACTIVE_MEMBER role if it is not already present.
+ * Manage the roles of the user for the membership.
+ * Add the role member if it is not already present.
  * @param currentRoles - The current roles of the user.
  * @returns The roles of the user after the membership is created.
  */
-export function reorganizeRolesForMembership(currentRoles: UserRoles[]): UserRoles[] {
-    const rolesToRemove = [UserRoles.USER, UserRoles.GUEST, UserRoles.MEMBER];
+export function manageRolesForMembership(currentRoles: UserRoles[]): UserRoles[] {
 
-    const privilegedRoles = currentRoles.filter((role) => !rolesToRemove.includes(role));
-
-    if (!privilegedRoles.includes(UserRoles.ACTIVE_MEMBER)) {
-        privilegedRoles.push(UserRoles.ACTIVE_MEMBER);
+    if (!currentRoles.includes(UserRoles.MEMBER)) {
+        currentRoles.push(UserRoles.MEMBER);
     }
 
-    return privilegedRoles;
+    return currentRoles;
 }
