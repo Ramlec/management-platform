@@ -1,27 +1,29 @@
-import { registerDecorator, ValidationOptions, ValidationArguments } from "class-validator";
+import { registerDecorator, ValidationArguments, ValidationOptions } from "class-validator";
 
 export function IsBefore(property: string, validationOptions?: ValidationOptions) {
-    return function (object: Object, propertyName: string) {
+    return function (object: object, propertyName: string) {
         registerDecorator({
-            name: `isBefore`,
-            target: object.constructor,
-            propertyName: propertyName,
             constraints: [property],
+            name: `isBefore`,
             options: validationOptions,
+            propertyName: propertyName,
+            target: object.constructor,
             validator: {
-                validate(value: any, args: ValidationArguments) {
-                    const [relatedPropertyName] = args.constraints;
-                    const relatedValue = (args.object as any)[relatedPropertyName];
+                defaultMessage(args: ValidationArguments) {
+                    const [relatedPropertyName] = args.constraints as [string];
+                    return `${args.property} must be before ${relatedPropertyName}`;
+                },
+                validate(value: Date | number | string | undefined, args: ValidationArguments) {
+                    const [relatedPropertyName] = args.constraints as [string];
+                    const relatedValue = (args.object as Record<string, unknown>)[
+                        relatedPropertyName
+                    ] as Date | number | string | undefined;
 
                     if (!value || !relatedValue) {
                         return true; // Let other validators handle missing values
                     }
 
                     return new Date(value) < new Date(relatedValue);
-                },
-                defaultMessage(args: ValidationArguments) {
-                    const [relatedPropertyName] = args.constraints;
-                    return `${args.property} must be before ${relatedPropertyName}`;
                 },
             },
         });

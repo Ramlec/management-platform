@@ -16,7 +16,7 @@ export class UserMembershipsService {
         private readonly userMembershipRepo: Repository<UserMembershipEntity>,
         private readonly usersService: UsersService,
         private readonly membershipsService: MembershipsService,
-    ) { }
+    ) {}
 
     /**
      * Create a new association between a user and a membership.
@@ -181,8 +181,7 @@ export class UserMembershipsService {
         });
         if (existingUserMemberships.length > 1)
             throw new ConflictException(`Multiple user memberships found for id ${id}`);
-        if (existingUserMemberships.length === 0)
-            return this.createUserMembership(userMembership);
+        if (existingUserMemberships.length === 0) return this.createUserMembership(userMembership);
 
         const existingUserMembership = existingUserMemberships[0];
         this.userMembershipRepo.merge(existingUserMembership, userMembership);

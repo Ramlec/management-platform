@@ -20,7 +20,7 @@ import { UserMembershipsService } from "./user-memberships.service";
 
 @Controller(`user-memberships`)
 export class UserMembershipsController {
-    constructor(private readonly userMembershipsService: UserMembershipsService) { }
+    constructor(private readonly userMembershipsService: UserMembershipsService) {}
 
     /**
      * Create a new user membership.

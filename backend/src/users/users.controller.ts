@@ -35,11 +35,15 @@ export class UsersController {
      * @returns The created user.
      */
     @Post()
-    async createUser(@Body() createUserDto: CreateOrUpdateUserDto): Promise<UserResponseDto> {
+    async createUser(
+        @Body() createUserDto: CreateOrUpdateUserDto,
+    ): Promise<UserResponseDto> {
         const newUser = plainToInstance(UserEntity, createUserDto);
 
         const savedUser = await this.usersService.createUser(newUser);
-        return plainToInstance(UserResponseDto, savedUser, { excludeExtraneousValues: true });
+        return plainToInstance(UserResponseDto, savedUser, {
+            excludeExtraneousValues: true,
+        });
     }
 
     /**
@@ -61,7 +65,8 @@ export class UsersController {
     async getActiveMembership(
         @Param() { id }: GetUserDto,
     ): Promise<null | UserMembershipResponseDto> {
-        const activeMembership = await this.userMembershipsService.getActiveMembership(id);
+        const activeMembership =
+            await this.userMembershipsService.getActiveMembership(id);
         if (!activeMembership) {
             return null;
         }
@@ -78,7 +83,9 @@ export class UsersController {
     @Get(`:id`)
     async getUser(@Param() { id }: GetUserDto): Promise<UserResponseDto> {
         const user = await this.usersService.getUser(id);
-        return plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true });
+        return plainToInstance(UserResponseDto, user, {
+            excludeExtraneousValues: true,
+        });
     }
 
     /**
@@ -107,8 +114,11 @@ export class UsersController {
      * @returns All memberships for this user.
      */
     @Get(`:id/memberships`)
-    async getUserMemberships(@Param() { id }: GetUserDto): Promise<UserMembershipResponseDto[]> {
-        const userMemberships = await this.userMembershipsService.getUserMemberships(id);
+    async getUserMemberships(
+        @Param() { id }: GetUserDto,
+    ): Promise<UserMembershipResponseDto[]> {
+        const userMemberships =
+            await this.userMembershipsService.getUserMemberships(id);
         return plainToInstance(UserMembershipResponseDto, userMemberships, {
             excludeExtraneousValues: true,
         });
@@ -121,7 +131,9 @@ export class UsersController {
     @Get()
     async listUsers(): Promise<UserResponseDto[]> {
         const users = await this.usersService.listUsers();
-        return plainToInstance(UserResponseDto, users, { excludeExtraneousValues: true });
+        return plainToInstance(UserResponseDto, users, {
+            excludeExtraneousValues: true,
+        });
     }
 
     /**
@@ -137,7 +149,9 @@ export class UsersController {
     ): Promise<UserResponseDto> {
         const user: Partial<UserEntity> = plainToInstance(UserEntity, patchUserDto);
         const updatedUser = await this.usersService.patchUser(id, user);
-        return plainToInstance(UserResponseDto, updatedUser, { excludeExtraneousValues: true });
+        return plainToInstance(UserResponseDto, updatedUser, {
+            excludeExtraneousValues: true,
+        });
     }
 
     /**
@@ -169,7 +183,8 @@ export class UsersController {
          * A more reliable approach would be to use a flag in the database to track if the resource is new
          * but that would imply the service to return isNew object.
          */
-        const isNew = updatedUser.createdAt.getTime() === updatedUser.updatedAt.getTime();
+        const isNew =
+            updatedUser.createdAt.getTime() === updatedUser.updatedAt.getTime();
         if (isNew) {
             throw new HttpException(response, HttpStatus.CREATED); // Could be an interceptor instead
         }

@@ -1,24 +1,53 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Patch, Post, Put } from "@nestjs/common";
-import { CreateOrUpdateMembershipDto } from "./dto/create-update-membership.dto";
-import { MembershipsService } from "./memberships.service";
-import { MembershipEntity } from "./entities/membership.entity";
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    HttpException,
+    HttpStatus,
+    Param,
+    Patch,
+    Post,
+    Put,
+} from "@nestjs/common";
 import { plainToInstance } from "class-transformer";
+
+import { CreateOrUpdateMembershipDto } from "./dto/create-update-membership.dto";
+import { GetMembershipDto } from "./dto/get-membership.dto";
 import { MembershipResponseDto } from "./dto/membership-response";
 import { PatchMembershipDto } from "./dto/patch-membership.dto";
-import { GetMembershipDto } from "./dto/get-membership.dto";
+import { MembershipEntity } from "./entities/membership.entity";
+import { MembershipsService } from "./memberships.service";
 
 @Controller(`memberships`)
 export class MembershipsController {
-    constructor(private readonly membershipsService: MembershipsService) { }
+    constructor(private readonly membershipsService: MembershipsService) {}
 
     /**
-     * List all memberships.
-     * @returns All memberships.
+     * Create a new membership.
+     * @param createMembershipDto - The membership to create.
+     * @returns The created membership.
      */
-    @Get()
-    async listMemberships(): Promise<MembershipResponseDto[]> {
-        const memberships = await this.membershipsService.listMemberships();
-        return plainToInstance(MembershipResponseDto, memberships, { excludeExtraneousValues: true });
+    @Post()
+    async createMembership(
+        @Body() createMembershipDto: CreateOrUpdateMembershipDto,
+    ): Promise<MembershipResponseDto> {
+        const newMembership = plainToInstance(MembershipEntity, createMembershipDto);
+
+        const savedMembership = await this.membershipsService.createMembership(newMembership);
+        return plainToInstance(MembershipResponseDto, savedMembership, {
+            excludeExtraneousValues: true,
+        });
+    }
+
+    /**
+     * Delete a membership.
+     * @param id - The id of the membership.
+     * @returns The delete result.
+     */
+    @Delete(`:id`)
+    async deleteMembership(@Param() { id }: GetMembershipDto): Promise<void> {
+        await this.membershipsService.deleteMembership(id);
     }
 
     /**
@@ -29,22 +58,21 @@ export class MembershipsController {
     @Get(`:id`)
     async getMembership(@Param() { id }: GetMembershipDto): Promise<MembershipResponseDto> {
         const membership = await this.membershipsService.getMembership(id);
-        return plainToInstance(MembershipResponseDto, membership, { excludeExtraneousValues: true });
+        return plainToInstance(MembershipResponseDto, membership, {
+            excludeExtraneousValues: true,
+        });
     }
 
     /**
-     * Create a new membership.
-     * @param createMembershipDto - The membership to create.
-     * @returns The created membership.
+     * List all memberships.
+     * @returns All memberships.
      */
-    @Post()
-    async createMembership(
-        @Body() createMembershipDto: CreateOrUpdateMembershipDto
-    ): Promise<MembershipResponseDto> {
-        const newMembership = plainToInstance(MembershipEntity, createMembershipDto);
-
-        const savedMembership = await this.membershipsService.createMembership(newMembership);
-        return plainToInstance(MembershipResponseDto, savedMembership, { excludeExtraneousValues: true });
+    @Get()
+    async listMemberships(): Promise<MembershipResponseDto[]> {
+        const memberships = await this.membershipsService.listMemberships();
+        return plainToInstance(MembershipResponseDto, memberships, {
+            excludeExtraneousValues: true,
+        });
     }
 
     /**
@@ -56,11 +84,16 @@ export class MembershipsController {
     @Patch(`:id`)
     async patchMembership(
         @Param() { id }: GetMembershipDto,
-        @Body() patchMembershipDto: PatchMembershipDto
+        @Body() patchMembershipDto: PatchMembershipDto,
     ): Promise<MembershipResponseDto> {
-        const membership: Partial<MembershipEntity> = plainToInstance(MembershipEntity, patchMembershipDto);
+        const membership: Partial<MembershipEntity> = plainToInstance(
+            MembershipEntity,
+            patchMembershipDto,
+        );
         const updatedMembership = await this.membershipsService.patchMembership(id, membership);
-        return plainToInstance(MembershipResponseDto, updatedMembership, { excludeExtraneousValues: true });
+        return plainToInstance(MembershipResponseDto, updatedMembership, {
+            excludeExtraneousValues: true,
+        });
     }
 
     /**
@@ -75,27 +108,20 @@ export class MembershipsController {
     @Put(`:id`)
     async updateMembership(
         @Param() { id }: GetMembershipDto,
-        @Body() updateMembershipDto: CreateOrUpdateMembershipDto
+        @Body() updateMembershipDto: CreateOrUpdateMembershipDto,
     ): Promise<MembershipResponseDto> {
         const membership = plainToInstance(MembershipEntity, updateMembershipDto);
         const updatedMembership = await this.membershipsService.updateMembership(id, membership);
-        const response = plainToInstance(MembershipResponseDto, updatedMembership, { excludeExtraneousValues: true });
+        const response = plainToInstance(MembershipResponseDto, updatedMembership, {
+            excludeExtraneousValues: true,
+        });
 
-        const isNew = updatedMembership.createdAt.getTime() === updatedMembership.updatedAt.getTime();
+        const isNew =
+            updatedMembership.createdAt.getTime() === updatedMembership.updatedAt.getTime();
         if (isNew) {
             throw new HttpException(response, HttpStatus.CREATED); // Could be an interceptor instead
         }
 
         return response;
-    }
-
-    /**
-     * Delete a membership.
-     * @param id - The id of the membership.
-     * @returns The delete result.
-     */
-    @Delete(`:id`)
-    async deleteMembership(@Param() { id }: GetMembershipDto): Promise<void> {
-        await this.membershipsService.deleteMembership(id);
     }
 }

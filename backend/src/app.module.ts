@@ -1,24 +1,25 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule } from './database/database.module';
-import { UsersModule } from './users/users.module';
-import { MembershipsModule } from './memberships/memberships.module';
-import { UserMembershipsModule } from './user-memberships/user-memberships.module';
+import { Module } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+import { DatabaseModule } from "./database/database.module";
+import { MembershipsModule } from "./memberships/memberships.module";
+import { UserMembershipsModule } from "./user-memberships/user-memberships.module";
+import { UsersModule } from "./users/users.module";
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
-    DatabaseModule,
-    UsersModule,
-    MembershipsModule,
-    UserMembershipsModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+    controllers: [AppController],
+    imports: [
+        ConfigModule.forRoot({
+            envFilePath: ".env",
+            isGlobal: true,
+        }),
+        DatabaseModule,
+        UsersModule,
+        MembershipsModule,
+        UserMembershipsModule,
+    ],
+    providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

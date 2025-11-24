@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { MembershipEntity } from "./entities/membership.entity";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
 import { UserMembershipEntity } from "src/user-memberships/entities/user-membership.entity";
+import { Repository } from "typeorm";
+
+import { MembershipEntity } from "./entities/membership.entity";
 
 @Injectable()
 export class MembershipsService {
@@ -11,14 +12,40 @@ export class MembershipsService {
         private readonly membershipRepository: Repository<MembershipEntity>,
         @InjectRepository(UserMembershipEntity)
         private readonly userMembershipRepository: Repository<UserMembershipEntity>,
-    ) { }
+    ) {}
 
     /**
-     * Get all memberships.
-     * @returns All memberships.
+     * Create a new membership, if the membership already exists, an error will be thrown
+     * @param membership - The membership to create.
+     * @returns The created membership.
      */
-    async listMemberships(): Promise<MembershipEntity[]> {
-        return this.membershipRepository.find();
+    async createMembership(membership: MembershipEntity): Promise<MembershipEntity> {
+        return this.membershipRepository.save(membership);
+    }
+
+    /**
+     * Delete a membership, if the membership does not exist or is associated with user memberships, an error will be thrown.
+     * @param id - The id of the membership.
+     * @returns The delete result.
+     * @status 404 NOT FOUND if the membership does not exist.
+     * @status 400 BAD REQUEST if the membership is associated with user memberships.
+     */
+    async deleteMembership(id: number): Promise<void> {
+        const countExistingMembership = await this.membershipRepository.count({
+            where: { id },
+        });
+        if (countExistingMembership === 0) {
+            throw new NotFoundException(`Membership not found`);
+        }
+        const countAssociatedUserMemberships = await this.userMembershipRepository.count({
+            where: { membershipId: id },
+        });
+        if (countAssociatedUserMemberships > 0) {
+            throw new BadRequestException(
+                `Membership is associated with user memberships, cannot delete`,
+            );
+        }
+        await this.membershipRepository.delete(id);
     }
 
     /**
@@ -35,12 +62,11 @@ export class MembershipsService {
     }
 
     /**
-     * Create a new membership, if the membership already exists, an error will be thrown
-     * @param membership - The membership to create.
-     * @returns The created membership.
+     * Get all memberships.
+     * @returns All memberships.
      */
-    async createMembership(membership: MembershipEntity): Promise<MembershipEntity> {
-        return this.membershipRepository.save(membership);
+    async listMemberships(): Promise<MembershipEntity[]> {
+        return this.membershipRepository.find();
     }
 
     /**
@@ -96,30 +122,5 @@ export class MembershipsService {
 
         this.membershipRepository.merge(existingMembership, membership);
         return this.membershipRepository.save(existingMembership);
-    }
-
-    /**
-     * Delete a membership, if the membership does not exist or is associated with user memberships, an error will be thrown.
-     * @param id - The id of the membership.
-     * @returns The delete result.
-     * @status 404 NOT FOUND if the membership does not exist.
-     * @status 400 BAD REQUEST if the membership is associated with user memberships.
-     */
-    async deleteMembership(id: number): Promise<void> {
-        const countExistingMembership = await this.membershipRepository.count({
-            where: { id },
-        });
-        if (countExistingMembership === 0) {
-            throw new NotFoundException(`Membership not found`);
-        }
-        const countAssociatedUserMemberships = await this.userMembershipRepository.count({
-            where: { membershipId: id },
-        });
-        if (countAssociatedUserMemberships > 0) {
-            throw new BadRequestException(
-                `Membership is associated with user memberships, cannot delete`,
-            );
-        }
-        await this.membershipRepository.delete(id);
     }
 }

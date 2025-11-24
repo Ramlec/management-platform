@@ -2,9 +2,17 @@ import { UserRoles } from "../roles/roles.enum";
 import { Permission } from "./permissions.enum";
 
 export const ROLE_PERMISSIONS: Record<UserRoles, Permission[]> = {
+    [UserRoles.ACTIVE_MEMBER]: [
+        Permission.USER_READ,
+        Permission.MEMBERSHIP_READ,
+        Permission.USER_MEMBERSHIP_READ,
+    ],
+
     [UserRoles.ADMIN]: [
         Permission.ADMIN_ALL, // Wildcard pour tout
     ],
+
+    [UserRoles.BARISTA]: [Permission.USER_READ, Permission.USER_MEMBERSHIP_READ],
 
     [UserRoles.BOARD]: [
         Permission.USER_READ,
@@ -26,33 +34,18 @@ export const ROLE_PERMISSIONS: Record<UserRoles, Permission[]> = {
         Permission.USER_MEMBERSHIP_WRITE,
     ],
 
-    [UserRoles.REFERANT]: [
-        Permission.USER_READ,
-        Permission.USER_MEMBERSHIP_READ,
-        Permission.USER_MEMBERSHIP_VALIDATE,
-    ],
-
-    [UserRoles.BARISTA]: [
-        Permission.USER_READ,
-        Permission.USER_MEMBERSHIP_READ,
-    ],
-
-    [UserRoles.ACTIVE_MEMBER]: [
-        Permission.USER_READ,
-        Permission.MEMBERSHIP_READ,
-        Permission.USER_MEMBERSHIP_READ,
+    [UserRoles.GUEST]: [
+        // No permissions
     ],
 
     [UserRoles.MEMBER]: [
         Permission.USER_READ, // Can see their own profile
     ],
 
-    [UserRoles.USER]: [
-        // No permissions
-    ],
-
-    [UserRoles.GUEST]: [
-        // No permissions
+    [UserRoles.REFERANT]: [
+        Permission.USER_READ,
+        Permission.USER_MEMBERSHIP_READ,
+        Permission.USER_MEMBERSHIP_VALIDATE,
     ],
 
     [UserRoles.SERVICES_BOARD]: [
@@ -61,5 +54,8 @@ export const ROLE_PERMISSIONS: Record<UserRoles, Permission[]> = {
         Permission.USER_UPDATE_ROLES, // Can change the roles referent/barista
         Permission.USER_MEMBERSHIP_READ,
     ],
-};
 
+    [UserRoles.USER]: [
+        // No permissions
+    ],
+};
