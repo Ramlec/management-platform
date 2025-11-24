@@ -7,7 +7,7 @@ import { UsersService } from "src/users/users.service";
 import { LessThanOrEqual, MoreThanOrEqual, Repository } from "typeorm";
 
 import { UserMembershipEntity } from "./entities/user-membership.entity";
-import { reorganizeRolesForMembership } from "./user-memberships.helpers";
+import { manageRolesForMembership } from "./user-memberships.helpers";
 
 @Injectable()
 export class UserMembershipsService {
@@ -16,7 +16,7 @@ export class UserMembershipsService {
         private readonly userMembershipRepo: Repository<UserMembershipEntity>,
         private readonly usersService: UsersService,
         private readonly membershipsService: MembershipsService,
-    ) {}
+    ) { }
 
     /**
      * Create a new association between a user and a membership.
@@ -43,7 +43,7 @@ export class UserMembershipsService {
             );
         }
         const savedUserMembership = await this.userMembershipRepo.save(userMembership);
-        const updatedRoles = reorganizeRolesForMembership(user.roles);
+        const updatedRoles = manageRolesForMembership(user.roles);
         await this.usersService.patchUser(user.id, { roles: updatedRoles });
         return savedUserMembership;
     }
