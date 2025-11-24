@@ -7,13 +7,9 @@ import { UserRoles } from "src/auth/roles/roles.enum";
  * @returns The roles of the user after the membership is created.
  */
 export function reorganizeRolesForMembership(currentRoles: UserRoles[]): UserRoles[] {
-    const rolesToRemove = [
-        UserRoles.USER,
-        UserRoles.GUEST,
-        UserRoles.MEMBER,
-    ];
+    const rolesToRemove = [UserRoles.USER, UserRoles.GUEST, UserRoles.MEMBER];
 
-    const privilegedRoles = currentRoles.filter(role => !rolesToRemove.includes(role));
+    const privilegedRoles = currentRoles.filter((role) => !rolesToRemove.includes(role));
 
     if (!privilegedRoles.includes(UserRoles.ACTIVE_MEMBER)) {
         privilegedRoles.push(UserRoles.ACTIVE_MEMBER);

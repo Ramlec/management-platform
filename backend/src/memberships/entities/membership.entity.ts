@@ -1,28 +1,36 @@
-import { BaseEntity, Check, Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+    BaseEntity,
+    Check,
+    Column,
+    CreateDateColumn,
+    Entity,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from "typeorm";
 
-@Entity(`memberships`)
 @Check(`"startAt" < "endAt"`)
+@Entity(`memberships`)
 export class MembershipEntity extends BaseEntity {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @CreateDateColumn({ name: `created_at` })
+    createdAt: Date;
 
-    @Column({ type: `decimal`, precision: 10, scale: 2 })
-    price: number;
-
-    @Column({ type: `varchar`, length: 255 })
-    name: string;
-
-    @Column({ type: `timestamp without time zone` })
-    startAt: Date;
+    @Column({ nullable: true, type: `text` })
+    description?: string;
 
     @Column({ type: `timestamp without time zone` })
     endAt: Date;
 
-    @Column({ type: `text`, nullable: true })
-    description?: string;
+    @PrimaryGeneratedColumn()
+    id: number;
 
-    @CreateDateColumn({ name: `created_at` })
-    createdAt: Date;
+    @Column({ length: 255, type: `varchar` })
+    name: string;
+
+    @Column({ precision: 10, scale: 2, type: `decimal` })
+    price: number;
+
+    @Column({ type: `timestamp without time zone` })
+    startAt: Date;
 
     @UpdateDateColumn({ name: `updated_at` })
     updatedAt: Date;

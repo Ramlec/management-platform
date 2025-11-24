@@ -1,7 +1,13 @@
-import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
+import {
+    CanActivate,
+    ExecutionContext,
+    ForbiddenException,
+    Injectable,
+} from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { Permission } from "../permissions/permissions.enum";
+
 import { PERMISSIONS_KEY } from "../permissions/permissions.decorator";
+import { Permission } from "../permissions/permissions.enum";
 import { PermissionsService } from "../permissions/permissions.service";
 import { UserRoles } from "../roles/roles.enum";
 
@@ -12,7 +18,7 @@ export class PermissionsGuard implements CanActivate {
         private permissionsService: PermissionsService,
     ) { }
 
-    async canActivate(context: ExecutionContext): Promise<boolean> {
+    canActivate(context: ExecutionContext): boolean {
         const requiredPermissions = this.reflector.getAllAndOverride<Permission[]>(
             PERMISSIONS_KEY,
             [context.getHandler(), context.getClass()],
@@ -25,7 +31,8 @@ export class PermissionsGuard implements CanActivate {
 
         // TODO: Get the user from the request (once the auth is implemented)
         // For now, we assume that the user is in request.user
-        const request = context.switchToHttp().getRequest();
+        const request: { user: { roles: undefined | UserRoles[] } | undefined } =
+            context.switchToHttp().getRequest();
         const user = request.user;
 
         if (!user || !user.roles) {
@@ -40,11 +47,10 @@ export class PermissionsGuard implements CanActivate {
 
         if (!hasPermission) {
             throw new ForbiddenException(
-                `Insufficient permissions. Required: ${requiredPermissions.join(`, `)}`
+                `Insufficient permissions. Required: ${requiredPermissions.join(`, `)}`,
             );
         }
 
         return true;
     }
 }
-

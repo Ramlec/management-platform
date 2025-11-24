@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
-import { PermissionsService } from "./permissions/permissions.service";
+
 import { PermissionsGuard } from "./guards/permissions.guard";
+import { PermissionsService } from "./permissions/permissions.service";
 
 @Module({
-    providers: [PermissionsService, PermissionsGuard],
     exports: [PermissionsService, PermissionsGuard],
+    providers: [PermissionsService, PermissionsGuard],
 })
-export class AuthModule { }
-
+export class AuthModule {}

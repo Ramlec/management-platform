@@ -1,98 +1,129 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Bar Commun - Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+> Le service backend pour la gestion des adhésions de l'association Le Bar Commun.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Ce projet est construit avec [NestJS](https://nestjs.com/), un framework Node.js pour la création d'applications côté serveur efficientes et scalables.
 
-## Description
+## 📌 Table des Matières
+- [À propos du projet](#-à-propos-du-projet)
+- [Fonctionnalités](#-fonctionnalités)
+- [Prérequis](#-prérequis)
+- [Installation et Lancement](#-installation-et-lancement)
+  - [Méthode 1 : Avec Docker (Recommandé)](#méthode-1--avec-docker-recommandé)
+  - [Méthode 2 : Lancement local](#méthode-2--lancement-local)
+- [Structure de l'API (Aperçu)](#-structure-de-lapi-aperçu)
+- [Contributions](#-contributions)
+- [Licence](#-licence)
+- [Contact](#-contact)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🚀 À propos du projet
 
-## Project setup
+L'objectif est de fournir une API robuste pour le site de gestion de l'association Le Bar Commun. L'application permet de gérer les adhésions des membres, de leur inscription initiale à la validation de leur statut.
 
-```bash
-$ pnpm install
-```
+Le flux principal pour un nouvel adhérent est le suivant :
+1. Un utilisateur remplit un formulaire avec son nom, prénom, et email.
+2. Il peut consentir à recevoir la newsletter et/ou à proposer son aide pour des services au bar.
+3. Si la personne souhaite aider, son numéro de téléphone est également demandé.
+4. À la soumission, une nouvelle adhésion est créée avec un statut "en attente de validation".
+5. Une fois l'adhésion validée par un administrateur, le statut est mis à jour.
 
-## Compile and run the project
+## ✨ Fonctionnalités
 
-```bash
-# development
-$ pnpm run start
+- API RESTful pour la gestion des utilisateurs et des adhésions.
+- Système de rôles et permissions pour sécuriser les points d'accès.
+- Validation des données entrantes.
+- Gestion du cycle de vie d'une adhésion (création, attente, validation).
 
-# watch mode
-$ pnpm run start:dev
+## 🛠️ Prérequis
 
-# production mode
-$ pnpm run start:prod
-```
+Avant de commencer, assurez-vous d'avoir installé les outils suivants :
 
-## Run tests
+- [Node.js](https://nodejs.org/) (version LTS recommandée, ex: 20.x)
+- [pnpm](https://pnpm.io/installation)
+- [Docker](https://www.docker.com/products/docker-desktop/) et Docker Compose
 
-```bash
-# unit tests
-$ pnpm run test
+## ⚙️ Installation et Lancement
 
-# e2e tests
-$ pnpm run test:e2e
+Deux méthodes sont disponibles pour lancer le projet : avec Docker (recommandé pour la simplicité) ou localement.
 
-# test coverage
-$ pnpm run test:cov
-```
+### Méthode 1 : Avec Docker (Recommandé)
 
-## Deployment
+Cette méthode lance l'application ainsi qu'une base de données PostgreSQL et PgAdmin dans des conteneurs Docker.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+1. **Cloner le dépôt** (si ce n'est pas déjà fait) :
+   ```bash
+   git clone <votre-url-de-depot>
+   cd BarCommun
+   ```
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+2. **Configurer l'environnement** :
+   Copiez le fichier d'exemple `.env.example` qui se trouve dans le dossier `backend` et renommez la copie en `.env`. Vous pouvez laisser les valeurs par défaut pour un démarrage rapide.
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
 
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
+3. **Lancer les services** :
+   À la racine du projet, exécutez la commande suivante :
+   ```bash
+   docker-compose up -d --build
+   ```
+   Les services suivants seront démarrés :
+   - `database`: Le serveur de base de données PostgreSQL, accessible sur le port `5432`.
+   - `pgadmin`: Une interface web pour gérer la base de données, accessible sur http://localhost:8001.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+4. **Lancer le backend** :
+   Une fois que les services docker sont lancés, vous pouvez lancer le backend en local avec la méthode 2, il se connectera à la base de données docker.
 
-## Resources
+### Méthode 2 : Lancement local
 
-Check out a few resources that may come in handy when working with NestJS:
+Cette méthode nécessite que vous ayez une instance de PostgreSQL accessible localement. Vous pouvez utiliser celle fournie par Docker (voir méthode 1) ou une autre.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+1. **Accéder au dossier du backend** :
+   ```bash
+   cd backend
+   ```
 
-## Support
+2. **Configurer l'environnement** (si non fait) :
+   Assurez-vous d'avoir un fichier `.env` configuré avec les bonnes informations de connexion à votre base de données.
+   ```bash
+   cp .env.example .env
+   # Modifiez .env si votre base de données n'utilise pas les identifiants par défaut
+   ```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+3. **Installer les dépendances** :
+   ```bash
+   pnpm install
+   ```
 
-## Stay in touch
+4. **Lancer l'application en mode développement** :
+   ```bash
+   pnpm run start:dev
+   ```
+   Le serveur se lancera et écoutera les modifications de fichiers. Par défaut, l'API est accessible sur **http://localhost:3000**.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 📚 Structure de l'API (Aperçu)
 
-## License
+L'API est versionnée. Pour accéder aux endpoints, vous devez préfixer l'URL par `/v1`.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- `/users`: Gère les informations des utilisateurs.
+- `/memberships`: Gère les différents types d'adhésions disponibles.
+- `/user-memberships`: Gère la liaison entre un utilisateur et son adhésion (statut, dates, etc.).
+- `/auth`: Gère l'authentification.
+
+## 🤝 Contributions
+
+Les contributions sont les bienvenues ! Pour contribuer, veuillez suivre ces étapes :
+
+1. Fork le projet.
+2. Créez une branche pour votre fonctionnalité (`git checkout -b feature/AmazingFeature`).
+3. Commitez vos modifications (`git commit -m 'Add some AmazingFeature'`).
+4. Poussez vers la branche (`git push origin feature/AmazingFeature`).
+5. Ouvrez une Pull Request.
+
+## 📜 Licence
+
+Distribué sous la licence MIT. Voir `LICENCE` pour plus d'informations.
+
+## 📧 Contact
+
+Pour toute question ou suggestion, veuillez nous contacter à l'adresse suivante : contact@barcommun.fr

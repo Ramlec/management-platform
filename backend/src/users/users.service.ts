@@ -1,21 +1,46 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
-import { UserEntity } from "./entities/user.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+
+import { UserEntity } from "./entities/user.entity";
 
 @Injectable()
 export class UsersService {
     constructor(
         @InjectRepository(UserEntity)
-        private readonly userRepository: Repository<UserEntity>) { }
-
+        private readonly userRepository: Repository<UserEntity>,
+    ) {}
 
     /**
-     * List all users.
-     * @returns All users.
+     * Create a new user, if the user already exists, an error will be thrown
+     * @param user - The user to create.
+     * @returns The created user.
      */
-    async listUsers(): Promise<UserEntity[]> {
-        return this.userRepository.find();
+    async createUser(user: UserEntity): Promise<UserEntity> {
+        const existingUser = await this.userRepository.findOne({
+            where: { email: user.email },
+        });
+
+        if (existingUser) {
+            throw new ConflictException(`User with this email already exists`);
+        }
+
+        return this.userRepository.save(user);
+    }
+
+    /**
+     * Delete a user (soft delete), if the user does not exist, an error will be thrown.
+     * @param id - The id of the user.
+     * @returns The delete result.
+     */
+    async deleteUser(id: number): Promise<void> {
+        const existingUser = await this.userRepository.findOne({
+            where: { id },
+        });
+        if (!existingUser) {
+            throw new NotFoundException(`User not found`);
+        }
+        await this.userRepository.softDelete(id);
     }
 
     /**
@@ -32,20 +57,11 @@ export class UsersService {
     }
 
     /**
-     * Create a new user, if the user already exists, an error will be thrown
-     * @param user - The user to create.
-     * @returns The created user.   
+     * List all users.
+     * @returns All users.
      */
-    async createUser(user: UserEntity): Promise<UserEntity> {
-        const existingUser = await this.userRepository.findOne({
-            where: { email: user.email },
-        });
-
-        if (existingUser) {
-            throw new ConflictException(`User with this email already exists`);
-        }
-
-        return this.userRepository.save(user);
+    async listUsers(): Promise<UserEntity[]> {
+        return this.userRepository.find();
     }
 
     /**
@@ -88,20 +104,5 @@ export class UsersService {
 
         this.userRepository.merge(existingUser, user);
         return this.userRepository.save(existingUser);
-    }
-
-    /**
-     * Delete a user (soft delete), if the user does not exist, an error will be thrown.
-     * @param id - The id of the user.
-     * @returns The delete result.
-     */
-    async deleteUser(id: number): Promise<void> {
-        const existingUser = await this.userRepository.findOne({
-            where: { id },
-        });
-        if (!existingUser) {
-            throw new NotFoundException(`User not found`);
-        }
-        await this.userRepository.softDelete(id);
     }
 }
